@@ -1,0 +1,35 @@
+{
+  "name": "Solo_Capstone_BE",
+  "version": "1.0.0",
+  "description": "/*\r \tYOLO its an application that people will use to create new friendship etc.\r \tClubs will use it for internal guests, if they want to benefit from this feature.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/server.js",
+    "dev": "nodemon -r dotenv/config ./src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klevinb/Solo_Capstone_BE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/klevinb/Solo_Capstone_BE/issues"
+  },
+  "homepage": "https://github.com/klevinb/Solo_Capstone_BE#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-list-endpoints": "^5.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.10.5",
+    "validator": "^13.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
