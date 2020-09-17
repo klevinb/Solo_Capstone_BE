@@ -10,8 +10,8 @@ router.get('/', async (req, res, next) => {
 router.post('/register', async (req, res, next) => {
   try {
     const newUser = new UserModel(req.body);
-    const user = await newUser.save();
-    res.status(201).send(user);
+    const {_id} = await newUser.save();
+    res.status(201).send(_id);
   } catch (error) {
     console.log(error);
     next(error);
