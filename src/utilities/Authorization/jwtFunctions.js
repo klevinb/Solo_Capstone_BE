@@ -7,7 +7,7 @@ const generateToken = async (user) => {
     const updateUser = await UserModel.findById(user._id);
 
     updateUser.token = token;
-    await updateUser.save();
+    await updateUser.save({ validateModifiedOnly: true });
     return { token };
   } catch (error) {
     console.log(error);

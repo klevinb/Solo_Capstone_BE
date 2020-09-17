@@ -1,6 +1,7 @@
 const { Schema } = require('mongoose');
 const mongoose = require('mongoose');
 const npmValidator = require('validator');
+const bcrypt = require('bcrypt');
 
 const UserSchema = new Schema({
   name: {
@@ -34,10 +35,17 @@ const UserSchema = new Schema({
       },
     },
   },
-  bio: {
-    type: String,
-    required: true,
-  },
+  favorite_drinks: [
+    {
+      type: String,
+    },
+  ],
+  interests: [
+    {
+      type: String,
+      require: true,
+    },
+  ],
   birthday: {
     type: Date,
   },
@@ -45,6 +53,9 @@ const UserSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+  },
+  photo: {
+    type: String,
   },
   email: {
     type: String,
@@ -65,15 +76,45 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
-  role:{
+  role: {
     type: String,
-    enum: ["admin", "user"],
-    default: "user"
+    enum: ['admin', 'user'],
+    default: 'user',
   },
   token: {
     type: String,
   },
 });
+
+UserSchema.pre('save', async function (next) {
+  const user = this;
+  if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 10);
+  }
+  next();
+});
+
+UserSchema.statics.findByCredentials = async (credentials, password) => {
+  const find = await UserModel.findOne({
+    $or: [{ username: credentials }, { email: credentials }],
+  });
+  if (find) {
+    const comparePw = await bcrypt.compare(password, find.password);
+    if (comparePw) return find;
+    else return null;
+  } else return null;
+};
+
+UserSchema.methods.toJSON = function () {
+  const user = this;
+  const userObject = user.toObject();
+
+  delete userObject.password;
+  delete userObject.__v;
+  delete userObject.token;
+
+  return userObject;
+};
 
 const UserModel = mongoose.model('User', UserSchema);
 
