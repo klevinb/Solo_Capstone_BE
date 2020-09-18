@@ -2,23 +2,8 @@ const express = require('express');
 const router = express.Router();
 const UserModel = require('./schema');
 const { generateToken } = require('../../utilities/Authorization/jwtFunctions');
-const { isUser } = require('../../utilities/middlewares');
+const { isUser, isAdmin } = require('../../utilities/middlewares');
 const multer = require('multer');
-
-// const {
-//   BlobServiceClient,
-//   StorageSharedKeyCredential,
-//   BlobLeaseClient,
-// } = require('@azure/storage-blob');
-
-// const credentials = new StorageSharedKeyCredential(
-//   'solocapstone',
-//   'Sn30hxd8tmfCdb2vOn1vpZynPNui4BWoZcAb3o8ZV8375Suy9BTwzSlSjxGC+6o36PvDzAI9bldTkZ0qI+npJA=='
-// );
-// const blobClient = new BlobServiceClient(
-//   'https://solocapstone.blob.core.windows.net/',
-//   credentials
-// );
 
 const MulterAzureStorage = require('multer-azure-storage');
 const uploadPhotos = multer({
@@ -74,6 +59,52 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
+// Admin routes
+
+router.get('/:username', isUser, isAdmin, async (req, res, next) => {
+  try {
+    const user = await UserModel.findOne({ username: req.params.username });
+    if (user) res.status(200).send(user);
+    else res.status(404).send('Not Found!');
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+router.put('/:username', isUser, isAdmin, async (req, res, next) => {
+  try {
+    delete req.body.username;
+    delete req.body.email;
+
+    const user = await UserModel.findOne({ username: req.params.username });
+    if (user) {
+      const updates = Object.keys(req.body);
+      updates.forEach((update) => (user[update] = req.body[update]));
+
+      await user.save({ validateBeforeSave: false });
+      res.status(200).send(user);
+    } else res.status(404).send('Not Found!');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:username', isUser, isAdmin, async (req, res, next) => {
+  try {
+    const user = await UserModel.findOne({ username: req.params.username });
+
+    if (user) {
+      await user.remove();
+      res.status(200).send('Deleted!');
+    } else res.status(404).send('Not Found!');
+
+    res.send('Deleted');
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Azure storage for photos with MulterAzureStorage
 router.post(
   '/me/upload',
@@ -92,31 +123,6 @@ router.post(
   }
 );
 
-// const options = new multer({});
-// router.post(
-//   '/:containerName/upload',
-//   options.single('file'),
-//   async (req, res) => {
-//     try {
-//       //get the container refence
-//       const container = await blobClient.getContainerClient(
-//         req.params.containerName
-//       );
-//       //upload
-//       const file = await container.uploadBlockBlob(
-//         req.file.originalname,
-//         req.file.buffer,
-//         req.file.size
-//       );
-
-//       res.send(file);
-//     } catch (e) {
-//       console.log(e);
-//       res.status(500).send(e);
-//     }
-//   }
-// );
-
 // login/logout, register routes
 router.post('/login', async (req, res, next) => {
   try {
@@ -130,7 +136,7 @@ router.post('/login', async (req, res, next) => {
     } else {
       const err = new Error();
       err.httpStatusCode = 404;
-      err.message = 'User not found!';
+      err.message = 'Check your username/passord!';
       next(err);
     }
   } catch (e) {}
