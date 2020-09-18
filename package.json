@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/klevinb/Solo_Capstone_BE#readme",
   "dependencies": {
+    "@azure/storage-blob": "^12.2.1",
     "bcrypt": "^5.0.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -28,6 +29,8 @@
     "express-list-endpoints": "^5.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.10.5",
+    "multer": "^1.4.2",
+    "multer-azure-storage": "^0.2.0",
     "validator": "^13.1.1"
   },
   "devDependencies": {

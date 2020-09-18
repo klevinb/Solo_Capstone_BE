@@ -28,14 +28,20 @@ const jwtCreator = (payload) =>
     )
   );
 
-const jwtVerifier = (payload) => {
+const jwtVerifier = (payload) =>
   new Promise((res, rej) =>
     jwt.verify(payload, process.env.SECRET_KEY, (err, credentials) => {
-      if (err) rej(err);
-      res(credentials);
+      if (err) {
+        if (err.name == 'TokenExpiredError') {
+          res(null);
+        } else {
+          rej(err);
+        }
+      } else {
+        res(credentials);
+      }
     })
   );
-};
 
 module.exports = {
   generateToken,

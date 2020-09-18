@@ -54,7 +54,7 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
   },
-  photo: {
+  image: {
     type: String,
   },
   email: {
@@ -116,6 +116,6 @@ UserSchema.methods.toJSON = function () {
   return userObject;
 };
 
-const UserModel = mongoose.model('User', UserSchema);
+const UserModel = mongoose.model('Profile', UserSchema);
 
 module.exports = UserModel;
