@@ -27,6 +27,17 @@ const isUser = async (req, res, next) => {
   }
 };
 
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role.toString() === 'admin') next();
+  else {
+    const err = new Error();
+    err.httpStatusCode = 401;
+    err.message = 'Only Admin can access this endpoint!';
+    next(err);
+  }
+};
+
 module.exports = {
   isUser,
+  isAdmin,
 };
