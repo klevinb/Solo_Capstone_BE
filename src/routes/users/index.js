@@ -4,7 +4,6 @@ const UserModel = require('./schema');
 const { generateToken } = require('../../utilities/Authorization/jwtFunctions');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
 const multer = require('multer');
-
 const MulterAzureStorage = require('multer-azure-storage');
 const uploadPhotos = multer({
   storage: new MulterAzureStorage({
@@ -13,6 +12,10 @@ const uploadPhotos = multer({
     containerSecurity: 'blob',
   }),
 });
+const sgMail = require('@sendgrid/mail');
+const pdfMakePrinter = require('pdfmake');
+const fs = require('fs-extra');
+const { join } = require('path');
 
 // logged-in user routes
 router.get('/me', isUser, async (req, res, next) => {
@@ -158,6 +161,55 @@ router.post('/register', async (req, res, next) => {
     const newUser = new UserModel(req.body);
     const { _id } = await newUser.save();
     res.status(201).send(_id);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// routes with Sendgrid to send user email with notifications
+
+router.get('/email/pdf', async (req, res, next) => {
+  try {
+    const fonts = {
+      Roboto: {
+        normal:
+          'node_modules/roboto-font/fonts/Roboto/roboto-regular-webfont.ttf',
+        bold: 'node_modules/roboto-font/fonts/Roboto/roboto-bold-webfont.ttf',
+        italics:
+          'node_modules/roboto-font/fonts/Roboto/roboto-italic-webfont.ttf',
+        bolditalics:
+          'node_modules/roboto-font/fonts/Roboto/roboto-bolditalic-webfont.ttf',
+      },
+    };
+    const printer = new pdfMakePrinter(fonts);
+    const imgData = await fs.readFile(
+      join(__dirname, '../../../assets/logo.png')
+    );
+    const data = 'data:image/png;base64,' + imgData.toString('base64');
+
+    const docDefinition = {
+      content: [
+        {
+          image: join(__dirname, '../../../Screenshot_1.png'),
+          width: 510,
+        },
+        {
+          image: 'bee',
+          width: 100,
+          height: 100,
+          absolutePosition: { x: 500, y: 10 },
+        },
+      ],
+      images: {
+        bee: data,
+      },
+    };
+
+    pdfDoc = printer.createPdfKitDocument(docDefinition);
+    res.setHeader('Content-Disposition', `attachment; filename=movies.pdf`);
+    pdfDoc.pipe(res);
+    pdfDoc.end();
   } catch (error) {
     console.log(error);
     next(error);
