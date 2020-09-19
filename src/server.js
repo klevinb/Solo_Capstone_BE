@@ -15,13 +15,18 @@ const {
 } = require('./utilities/errorHandlers');
 
 const app = express();
+const corsOpt = {
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+};
+
+app.use(cors(corsOpt));
 const server = http.createServer(app);
 
 socketio(server);
 
 const port = process.env.PORT;
 
-app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
