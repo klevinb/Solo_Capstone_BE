@@ -59,6 +59,24 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
+// Azure storage for photos with MulterAzureStorage
+router.post(
+  '/me/upload',
+  isUser,
+  uploadPhotos.single('file'),
+  async (req, res) => {
+    // res.send(req.file.url);
+    try {
+      req.user.image = req.file.url;
+      await req.user.save({ validateBeforeSave: false });
+      res.status(200).send('OK');
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
+
 // Admin routes
 
 router.get('/:username', isUser, isAdmin, async (req, res, next) => {
@@ -104,24 +122,6 @@ router.delete('/:username', isUser, isAdmin, async (req, res, next) => {
     next(error);
   }
 });
-
-// Azure storage for photos with MulterAzureStorage
-router.post(
-  '/me/upload',
-  isUser,
-  uploadPhotos.single('file'),
-  async (req, res) => {
-    // res.send(req.file.url);
-    try {
-      req.user.image = req.file.url;
-      await req.user.save({ validateBeforeSave: false });
-      res.status(200).send('OK');
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  }
-);
 
 // login/logout, register routes
 router.post('/login', async (req, res, next) => {
