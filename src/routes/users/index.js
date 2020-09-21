@@ -18,7 +18,7 @@ const uploadPhotos = multer({
   }),
 });
 const sgMail = require('@sendgrid/mail');
-const pdfMakePrinter = require('pdfmake');
+const fs = require('fs-extra');
 
 // logged-in user routes
 router.get('/me', isUser, async (req, res, next) => {
@@ -172,36 +172,63 @@ router.post('/register', async (req, res, next) => {
 
 // routes with Sendgrid to send user email with notifications
 
-router.get('/:eventId/pdf', async (req, res, next) => {
+router.post('/:eventId/pdf', isUser, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     if (event) {
-      const fonts = {
-        Roboto: {
-          normal:
-            'node_modules/roboto-font/fonts/Roboto/roboto-regular-webfont.ttf',
-          bold: 'node_modules/roboto-font/fonts/Roboto/roboto-bold-webfont.ttf',
-          italics:
-            'node_modules/roboto-font/fonts/Roboto/roboto-italic-webfont.ttf',
-          bolditalics:
-            'node_modules/roboto-font/fonts/Roboto/roboto-bolditalic-webfont.ttf',
-        },
-      };
-      const printer = new pdfMakePrinter(fonts);
-
       if (event.image.length) {
         const imageUrl = event.image[0];
-        const document = await generatePdfWithPhoto(imageUrl);
-        pdfDoc = printer.createPdfKitDocument(document);
-        res.setHeader('Content-Disposition', `attachment; filename=movies.pdf`);
-        pdfDoc.pipe(res);
-        pdfDoc.end();
+        const document = await generatePdfWithPhoto(imageUrl, req.body.email);
+
+        const sendEmail = async () => {
+          fs.readFile(document, function (err, data) {
+            let data_base64 = data.toString('base64');
+            sgMail.send({
+              to: `${req.body.email}`,
+              from: 'events@yolo.com',
+              subject: 'Event Details',
+              text: `${req.user.name} thanks for booking our event! Below you will find informations about the event.`,
+              attachments: [
+                {
+                  filename: `EvenetDetails.pdf`,
+                  content: data_base64,
+                  type: 'application/pdf',
+                  disposition: 'attachment',
+                },
+              ],
+            });
+          });
+          fs.unlink(document);
+        };
+        setTimeout(sendEmail, 1000);
+        res.status(201).send('Sent');
       } else {
-        const document = await generatePdf();
-        pdfDoc = printer.createPdfKitDocument(document);
-        res.setHeader('Content-Disposition', `attachment; filename=movies.pdf`);
-        pdfDoc.pipe(res);
-        pdfDoc.end();
+        const document = await generatePdf(req.body.email);
+        console.log(document);
+
+        const sendEmail = async () => {
+          fs.readFile(document, function (err, data) {
+            let data_base64 = data.toString('base64');
+            sgMail.send({
+              to: `${req.body.email}`,
+              from: 'events@yolo.com',
+              subject: 'Event Details',
+              text: `${req.user.name} thanks for booking our event! Below you will find more informations.`,
+              attachments: [
+                {
+                  filename: `EventDetails.pdf`,
+                  content: data_base64,
+                  type: 'application/pdf',
+                  disposition: 'attachment',
+                },
+              ],
+            });
+          });
+          fs.unlink(document);
+        };
+        setTimeout(sendEmail, 1000);
+        res.status(201).send('Sent');
       }
     } else {
       const err = new Error('There is no event with that ID!');
