@@ -7,21 +7,21 @@ const badRequest = (err, req, res, next) => {
 
 const unAuthorized = (err, req, res, next) => {
   if (err.httpStatusCode === 401) {
-    res.status(400).send(err.message || 'Unauthorized!');
+    res.status(401).send(err.message || 'Unauthorized!');
   }
   next(err);
 };
 
 const isForbidden = (err, req, res, next) => {
   if (err.httpStatusCode === 403) {
-    res.status(400).send(err.message || 'Forbidden!');
+    res.status(403).send(err.message || 'Forbidden!');
   }
   next(err);
 };
 
 const notFound = (err, req, res, next) => {
   if (err.httpStatusCode === 404) {
-    res.status(400).send(err.message || 'Not Found!');
+    res.status(404).send(err.message || 'Not Found!');
   }
   next(err);
 };
