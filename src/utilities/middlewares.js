@@ -8,22 +8,28 @@ const isUser = async (req, res, next) => {
     if (token) {
       const credentials = await jwtVerifier(token);
 
-      const user = await ProfileModel.findById(credentials._id);
-
-      if (user) {
-        req.user = user;
-        next();
+      if (!credentials) {
+        const err = new Error('Please authenticate yourself!');
+        err.httpStatusCode = 401;
+        next(err);
       } else {
-        res.status(404).send('Check your username/passord');
+        const user = await ProfileModel.findById(credentials._id);
+
+        if (user) {
+          req.user = user;
+          next();
+        } else {
+          res.status(404).send('Check your username/passord');
+        }
       }
     } else {
-      const err = new Error();
+      const err = new Error('Token missing!');
       err.httpStatusCode = 400;
-      err.message = 'Token missing!';
       next(err);
     }
   } catch (error) {
     console.log(error);
+    next(error);
   }
 };
 
