@@ -1,8 +1,20 @@
 const axios = require('axios');
 const fs = require('fs-extra');
 const { join } = require('path');
+const pdfMakePrinter = require('pdfmake');
 
-const generatePdfWithPhoto = async (url) => {
+const fonts = {
+  Roboto: {
+    normal: 'node_modules/roboto-font/fonts/Roboto/roboto-regular-webfont.ttf',
+    bold: 'node_modules/roboto-font/fonts/Roboto/roboto-bold-webfont.ttf',
+    italics: 'node_modules/roboto-font/fonts/Roboto/roboto-italic-webfont.ttf',
+    bolditalics:
+      'node_modules/roboto-font/fonts/Roboto/roboto-bolditalic-webfont.ttf',
+  },
+};
+const printer = new pdfMakePrinter(fonts);
+
+const generatePdfWithPhoto = async (url, filename) => {
   const imgData = await fs.readFile(join(__dirname, '../../assets/logo.png'));
   const logoData = 'data:image/png;base64,' + imgData.toString('base64');
 
@@ -34,10 +46,16 @@ const generatePdfWithPhoto = async (url) => {
       event: image,
     },
   };
-  return docDefinition;
+  pdfDoc = printer.createPdfKitDocument(docDefinition);
+  pdfDoc.pipe(
+    fs.createWriteStream(join(__dirname, `../../assets/pdf/${filename}.pdf`))
+  );
+  pdfDoc.end();
+  const pdfData = join(__dirname, `../../assets/pdf/${filename}.pdf`);
+  return pdfData;
 };
 
-const generatePdf = async () => {
+const generatePdf = async (filename) => {
   const imgData = await fs.readFile(join(__dirname, '../../assets/logo.png'));
   const logoData = 'data:image/png;base64,' + imgData.toString('base64');
 
@@ -59,7 +77,13 @@ const generatePdf = async () => {
       logo: logoData,
     },
   };
-  return docDefinition;
+  pdfDoc = printer.createPdfKitDocument(docDefinition);
+  pdfDoc.pipe(
+    fs.createWriteStream(join(__dirname, `../../assets/pdf/${filename}.pdf`))
+  );
+  pdfDoc.end();
+  const pdfData = join(__dirname, `../../assets/pdf/${filename}.pdf`);
+  return pdfData;
 };
 
 module.exports = {
