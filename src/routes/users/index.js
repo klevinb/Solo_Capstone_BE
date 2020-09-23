@@ -8,17 +8,20 @@ const {
   generatePdfWithPhoto,
   generatePdf,
 } = require('../../utilities/pdfGenerator');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 const multer = require('multer');
-const MulterAzureStorage = require('multer-azure-storage');
-const uploadPhotos = multer({
-  storage: new MulterAzureStorage({
-    azureStorageConnectionString: process.env.PHOTOS_CONNECTION_STRING,
-    containerName: 'photos',
-    containerSecurity: 'blob',
-  }),
-});
 const sgMail = require('@sendgrid/mail');
 const fs = require('fs-extra');
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const upload = multer();
 
 // logged-in user routes
 router.get('/me', isUser, async (req, res, next) => {
@@ -66,18 +69,35 @@ router.delete('/me/photo', isUser, async (req, res) => {
 });
 
 // Azure storage for photos with MulterAzureStorage
+
 router.post(
   '/me/upload',
+  upload.single('profile'),
   isUser,
-  uploadPhotos.single('file'),
-  async (req, res) => {
-    // res.send(req.file.url);
+  async (req, res, next) => {
     try {
-      req.user.image = req.file.url;
-      await req.user.save({ validateBeforeSave: false });
-      res.status(200).send('OK');
+      if (req.file) {
+        const cld_upload_stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'profiles',
+          },
+          async (err, result) => {
+            if (!err) {
+              req.user.image = result.secure_url;
+              await req.user.save({ validateBeforeSave: false });
+
+              res.status(200).send('Done');
+            }
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
+      } else {
+        const err = new Error();
+        err.httpStatusCode = 400;
+        err.message = 'Image file missing!';
+        next(err);
+      }
     } catch (error) {
-      console.log(error);
       next(error);
     }
   }
