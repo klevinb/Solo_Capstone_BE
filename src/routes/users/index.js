@@ -24,6 +24,18 @@ cloudinary.config({
 const upload = multer();
 
 // logged-in user routes
+router.get('/', isUser, async (req, res, next) => {
+  try {
+    const users = await UserModel.find({}).populate('followers', [
+      'name',
+      'surname',
+      'image',
+    ]);
+    res.status(200).send(users);
+  } catch (error) {
+    next(error);
+  }
+});
 router.get('/me', isUser, async (req, res, next) => {
   try {
     res.status(200).send(req.user);
@@ -107,7 +119,9 @@ router.post(
 
 router.get('/:username', isUser, isAdmin, async (req, res, next) => {
   try {
-    const user = await UserModel.findOne({ username: req.params.username });
+    const user = await UserModel.findOne({
+      username: req.params.username,
+    }).populate('followers');
     if (user) res.status(200).send(user);
     else res.status(404).send('Not Found!');
   } catch (error) {
