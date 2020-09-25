@@ -31,7 +31,33 @@ const EventSchema = new Schema({
     type: String,
     required: true,
   },
-  participants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  participants: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
+});
+
+EventSchema.static('checkParticipants', async function (id, userId) {
+  const user = await EventModel.findOne({
+    _id: id,
+    participants: mongoose.Types.ObjectId(userId),
+  });
+  return user;
+});
+
+EventSchema.static('addParticipant', async function (id, userId) {
+  await EventModel.findByIdAndUpdate(
+    { _id: id },
+    {
+      $addToSet: { participants: userId },
+    }
+  );
+});
+
+EventSchema.static('removeParticipant', async function (id, userId) {
+  await EventModel.findByIdAndUpdate(
+    { _id: id },
+    {
+      $pull: { participants: mongoose.Types.ObjectId(userId) },
+    }
+  );
 });
 
 EventSchema.methods.toJSON = function () {
