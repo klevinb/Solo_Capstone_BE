@@ -84,6 +84,7 @@ const UserSchema = new Schema({
   token: {
     type: String,
   },
+  followers: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
 });
 
 UserSchema.pre('save', async function (next) {
