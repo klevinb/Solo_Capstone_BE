@@ -25,11 +25,13 @@ const EventSchema = new Schema({
   },
   performer: {
     type: String,
+    default: '',
   },
   organizer: {
     type: String,
     required: true,
   },
+  participants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 });
 
 EventSchema.methods.toJSON = function () {
