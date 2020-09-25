@@ -4,6 +4,7 @@ const EventModel = require('./schema');
 const router = express.Router();
 
 router.get('/', isUser, async (req, res, next) => {
+router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
   try {
     const events = await EventModel.find({});
 
@@ -11,8 +12,44 @@ router.get('/', isUser, async (req, res, next) => {
       const err = new Error('There are no events created so far!');
       err.httpStatusCode = 404;
       next(err);
+    const user = await EventModel.checkParticipants(
+      req.params.eventId,
+      req.user._id
+    );
+    if (!user) {
+      await EventModel.addParticipant(req.params.eventId, req.user._id);
+      res.send('Added');
     } else {
       res.status(200).send(events);
+      res.send('Already in Event');
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+router.post(
+  '/:eventId/removeParticipant/:userId',
+  isUser,
+  isAdmin,
+  async (req, res, next) => {
+    try {
+      const user = await EventModel.checkParticipants(
+        req.params.eventId,
+        req.params.userId
+      );
+      if (user) {
+        await EventModel.removeParticipant(
+          req.params.eventId,
+          req.params.userId
+        );
+        res.send('Removed');
+      } else {
+        res.send('User is not registered in event!');
+      }
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
   } catch (error) {
     console.log(error);
