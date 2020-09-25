@@ -1,17 +1,11 @@
 const express = require('express');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
 const EventModel = require('./schema');
+const q2m = require('query-to-mongo');
 const router = express.Router();
 
-router.get('/', isUser, async (req, res, next) => {
 router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
   try {
-    const events = await EventModel.find({});
-
-    if (events.length === 0) {
-      const err = new Error('There are no events created so far!');
-      err.httpStatusCode = 404;
-      next(err);
     const user = await EventModel.checkParticipants(
       req.params.eventId,
       req.user._id
@@ -20,7 +14,6 @@ router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
       await EventModel.addParticipant(req.params.eventId, req.user._id);
       res.send('Added');
     } else {
-      res.status(200).send(events);
       res.send('Already in Event');
     }
   } catch (error) {
@@ -51,6 +44,40 @@ router.post(
       console.log(error);
       next(error);
     }
+  }
+);
+
+router.get('/', isUser, async (req, res, next) => {
+  try {
+    const query = q2m(req.query);
+
+    const events = await EventModel.find({
+      name: new RegExp(
+        '^' +
+          (query.criteria.name && query.criteria.name.$exists === undefined
+            ? query.criteria.name
+            : ''),
+        'i'
+      ),
+      performer: new RegExp(
+        '^' +
+          (query.criteria.performer &&
+          query.criteria.performer.$exists === undefined
+            ? query.criteria.performer
+            : ''),
+        'i'
+      ),
+      organizer: new RegExp(
+        '^' +
+          (query.criteria.organizer &&
+          query.criteria.organizer.$exists === undefined
+            ? query.criteria.organizer
+            : ''),
+        'i'
+      ),
+    }).populate('participants', ['name', 'surname', 'image']);
+
+    res.status(200).send(events);
   } catch (error) {
     console.log(error);
     next(error);
