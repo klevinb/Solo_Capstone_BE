@@ -4,6 +4,7 @@ const UserModel = require('./schema');
 const EventModel = require('../events/schema');
 const { generateToken } = require('../../utilities/Authorization/jwtFunctions');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
+const schedule = require('node-schedule');
 const {
   generatePdfWithPhoto,
   generatePdf,
@@ -22,6 +23,10 @@ cloudinary.config({
 });
 
 const upload = multer();
+
+schedule.scheduleJob('* */24 * * *', async function () {
+  await UserModel.collection.updateMany({}, { $set: { stories: [] } });
+});
 
 // logged-in user routes
 router.get('/', isUser, async (req, res, next) => {
