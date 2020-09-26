@@ -79,12 +79,11 @@ const UserSchema = new Schema({
   role: {
     type: String,
     enum: ['admin', 'user'],
-    default: 'user',
   },
   token: {
     type: String,
   },
-  followers: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
+  stories: [{ type: String }],
 });
 
 UserSchema.pre('save', async function (next) {
