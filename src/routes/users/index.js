@@ -14,6 +14,7 @@ const streamifier = require('streamifier');
 const multer = require('multer');
 const sgMail = require('@sendgrid/mail');
 const fs = require('fs-extra');
+const passport = require('passport');
 
 // Cloudinary configuration
 cloudinary.config({
@@ -254,6 +255,36 @@ router.post('/register', async (req, res, next) => {
     next(error);
   }
 });
+
+// oAuth
+router.get(
+  '/auth/facebook',
+  passport.authenticate('facebook', { scope: ['email'] })
+);
+
+router.get(
+  '/auth/facebook/redirect',
+  passport.authenticate('facebook'),
+  async (req, res, next) => {
+    try {
+      const token = req.user.token;
+      res.cookie('token', token, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      });
+
+      res.writeHead(301, {
+        Location:
+          process.env.FRONTEND_URL + '/profiles/me?' + req.user.username,
+      });
+      res.end();
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
 
 // routes with Sendgrid to send user email with notifications
 

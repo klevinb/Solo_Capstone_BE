@@ -43,7 +43,6 @@ const UserSchema = new Schema({
   interests: [
     {
       type: String,
-      require: true,
     },
   ],
   birthday: {
