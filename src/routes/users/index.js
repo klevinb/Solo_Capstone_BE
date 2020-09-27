@@ -86,6 +86,44 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
+router.post(
+  '/me/story',
+  upload.single('story'),
+  isUser,
+  async (req, res, next) => {
+    try {
+      try {
+        if (req.file) {
+          const cld_upload_stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'stories',
+            },
+            async (err, result) => {
+              if (!err) {
+                req.user.stories.push(result.secure_url);
+                await req.user.save({ validateBeforeSave: false });
+
+                res.status(200).send('Done');
+              }
+            }
+          );
+          streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
+        } else {
+          const err = new Error();
+          err.httpStatusCode = 400;
+          err.message = 'Image file missing!';
+          next(err);
+        }
+      } catch (error) {
+        next(error);
+      }
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
+
 // Azure storage for photos with MulterAzureStorage
 
 router.post(
@@ -178,14 +216,22 @@ router.post('/login', async (req, res, next) => {
 
     if (user) {
       const token = await generateToken(user);
-      res.send(token);
+      res.cookie('token', token.token, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      });
+      res.sendStatus(200);
     } else {
       const err = new Error();
       err.httpStatusCode = 404;
       err.message = 'Check your username/passord!';
       next(err);
     }
-  } catch (e) {}
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 router.post('/logout', isUser, async (req, res, next) => {
