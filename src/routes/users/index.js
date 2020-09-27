@@ -65,44 +65,6 @@ router.put('/me', isUser, async (req, res, next) => {
   }
 });
 
-router.post(
-  '/me/story',
-  upload.single('story'),
-  isUser,
-  async (req, res, next) => {
-    try {
-      try {
-        if (req.file) {
-          const cld_upload_stream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'stories',
-            },
-            async (err, result) => {
-              if (!err) {
-                req.user.stories.push(result.secure_url);
-                await req.user.save({ validateBeforeSave: false });
-
-                res.status(200).send('Done');
-              }
-            }
-          );
-          streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
-        } else {
-          const err = new Error();
-          err.httpStatusCode = 400;
-          err.message = 'Image file missing!';
-          next(err);
-        }
-      } catch (error) {
-        next(error);
-      }
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  }
-);
-
 router.delete('/me', isUser, async (req, res, next) => {
   try {
     await req.user.remove();
@@ -216,22 +178,14 @@ router.post('/login', async (req, res, next) => {
 
     if (user) {
       const token = await generateToken(user);
-      res.cookie('token', token.token, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
-      });
-      res.send(findUser.username);
+      res.send(token);
     } else {
       const err = new Error();
       err.httpStatusCode = 404;
       err.message = 'Check your username/passord!';
       next(err);
     }
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
+  } catch (e) {}
 });
 
 router.post('/logout', isUser, async (req, res, next) => {
