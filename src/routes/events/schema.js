@@ -31,6 +31,10 @@ const EventSchema = new Schema({
     type: String,
     required: true,
   },
+  price: {
+    type: Number,
+    required: true,
+  },
   participants: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
 });
 
