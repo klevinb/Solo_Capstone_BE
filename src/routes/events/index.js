@@ -3,6 +3,96 @@ const { isUser, isAdmin } = require('../../utilities/middlewares');
 const EventModel = require('./schema');
 const q2m = require('query-to-mongo');
 const router = express.Router();
+const paypal = require('paypal-rest-sdk');
+
+paypal.configure({
+  mode: 'sandbox', //sandbox or live
+  client_id: process.env.PAYPAL_CLIENT_ID,
+  client_secret: process.env.PAYPAL_SECRET,
+});
+
+router.post('/buyEvent/:eventId', isUser, async (req, res, next) => {
+  try {
+    const event = await EventModel.findById(req.params.eventId);
+    if (event) {
+      const create_payment_json = {
+        intent: 'sale',
+        payer: {
+          payment_method: 'paypal',
+        },
+        redirect_urls: {
+          return_url: 'http://localhost:3005/api/events/paypal?success',
+          cancel_url: 'http://localhost:3000/',
+        },
+        transactions: [
+          {
+            item_list: {
+              items: [
+                {
+                  name: event.name,
+                  sku: 'item',
+                  price: event.price,
+                  currency: 'USD',
+                  quantity: 1,
+                },
+              ],
+            },
+            amount: {
+              currency: 'USD',
+              total: event.price,
+            },
+            description: `This payment it for ${event.name}. The event description ${event.description}`,
+          },
+        ],
+      };
+
+      paypal.payment.create(create_payment_json, function (error, payment) {
+        if (error) {
+          throw error;
+        } else {
+          res.json(payment.links[1].href);
+        }
+      });
+    } else {
+      const err = new Error('There is no event with that ID!');
+      err.httpStatusCode = 404;
+      next(err);
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+router.get('/paypal', isUser, async (req, res, next) => {
+  try {
+    console.log(req.query.PayerID, req.query.paymentId);
+    const { success, cancel } = req.query;
+    console.log(success, cancel);
+    const execute_payment_json = {
+      payer_id: req.query.PayerID,
+    };
+
+    const paymentId = req.query.paymentId;
+
+    paypal.payment.execute(paymentId, execute_payment_json, function (
+      error,
+      payment
+    ) {
+      if (error) {
+        console.log(error.response);
+        throw error;
+      } else {
+        console.log('Get Payment Response');
+        console.log(JSON.stringify(payment));
+        res.redirect(process.env.FRONTEND_URL);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
 
 router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
   try {
