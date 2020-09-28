@@ -212,11 +212,7 @@ router.post('/login', async (req, res, next) => {
 
     if (user) {
       const token = await generateToken(user);
-      res.cookie('token', token.token, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
-      });
+      res.cookie('token', token.token);
       res.sendStatus(200);
     } else {
       const err = new Error();
