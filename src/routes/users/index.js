@@ -32,11 +32,7 @@ schedule.scheduleJob('* */24 * * *', async function () {
 // logged-in user routes
 router.get('/', isUser, async (req, res, next) => {
   try {
-    const users = await UserModel.find({}).populate('followers', [
-      'name',
-      'surname',
-      'image',
-    ]);
+    const users = await UserModel.find({});
     res.status(200).send(users);
   } catch (error) {
     next(error);
