@@ -85,7 +85,7 @@ router.get('/paypal', isUser, async (req, res, next) => {
       } else {
         console.log('Get Payment Response');
         console.log(JSON.stringify(payment));
-        res.redirect(process.env.FRONTEND_URL);
+        res.redirect(process.env.FRONTEND_URL + '/events');
       }
     });
   } catch (error) {
