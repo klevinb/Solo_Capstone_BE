@@ -174,6 +174,19 @@ router.get('/', isUser, async (req, res, next) => {
   }
 });
 
+router.get('/notUser', async (req, res, next) => {
+  try {
+    const events = await EventModel.find({});
+    if (events.length > 3) {
+      res.status(200).send(events.slice(0, 3));
+    }
+    res.status(200).send(events);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
 router.get('/:eventId', isUser, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
