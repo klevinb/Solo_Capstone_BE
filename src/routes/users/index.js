@@ -212,7 +212,11 @@ router.post('/login', async (req, res, next) => {
 
     if (user) {
       const token = await generateToken(user);
-      res.cookie('token', token.token);
+      res.cookie('token', token.token, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      });
       res.sendStatus(200);
     } else {
       const err = new Error();
@@ -267,8 +271,7 @@ router.get(
       });
 
       res.writeHead(301, {
-        Location:
-          process.env.FRONTEND_URL + '/profiles/me?' + req.user.username,
+        Location: process.env.FRONTEND_URL + '/dashbord',
       });
       res.end();
     } catch (error) {
