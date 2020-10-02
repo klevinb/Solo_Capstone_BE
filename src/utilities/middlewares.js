@@ -13,9 +13,12 @@ const isUser = async (req, res, next) => {
         err.httpStatusCode = 401;
         next(err);
       } else {
-        const user = await ProfileModel.findById(
-          credentials._id
-        ).populate('followers', ['name', 'surname', 'image']);
+        const user = await ProfileModel.findOne({
+          _id: credentials._id,
+          token: token,
+        })
+          .populate('followers', ['name', 'surname', 'image'])
+          .populate('events');
 
         if (user) {
           req.user = user;
