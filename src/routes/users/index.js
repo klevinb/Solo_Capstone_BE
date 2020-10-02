@@ -235,6 +235,9 @@ router.post('/login', async (req, res, next) => {
         httpOnly: true,
         sameSite: 'none',
         secure: true,
+        // httpOnly: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } else {
