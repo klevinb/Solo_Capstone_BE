@@ -1,5 +1,6 @@
 const { Schema } = require('mongoose');
 const mongoose = require('mongoose');
+const UserModel = require('../users/schema');
 
 const EventSchema = new Schema({
   name: {
@@ -53,6 +54,9 @@ EventSchema.static('addParticipant', async function (id, userId) {
       $addToSet: { participants: userId },
     }
   );
+  await UserModel.findByIdAndUpdate(userId, {
+    $addToSet: { events: id },
+  });
 });
 
 EventSchema.static('removeParticipant', async function (id, userId) {
@@ -62,6 +66,9 @@ EventSchema.static('removeParticipant', async function (id, userId) {
       $pull: { participants: mongoose.Types.ObjectId(userId) },
     }
   );
+  await UserModel.findByIdAndUpdate(userId, {
+    $pull: { events: mongoose.Types.ObjectId(id) },
+  });
 });
 
 EventSchema.methods.toJSON = function () {
