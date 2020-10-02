@@ -56,6 +56,13 @@ router.put('/me', isUser, async (req, res, next) => {
 
     await req.user.save({ validateBeforeSave: false });
     res.send(req.user);
+    const newEdit = await req.user.save({ validateBeforeSave: false });
+    res.send(newEdit);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/me/oldPassword', isUser, async (req, res, next) => {
   try {
     const oldPassword = req.body.password;
