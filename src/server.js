@@ -41,15 +41,13 @@ app.use(genericError);
 
 console.log(listEndpoints(app));
 
+// process.env.MONGOOSE_CONNECTION_STRING
 mongoose
-  .connect(
-    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dn7fa.mongodb.net/${process.env.DB_NAME}`,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: true,
-    }
-  )
+  .connect('mongodb://localhost:27017/Solo_Capstone', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: true,
+  })
   .then(
     server.listen(port, () => {
       console.log(`Server runinng port: { ${port} }`);
