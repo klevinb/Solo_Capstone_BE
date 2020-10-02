@@ -54,8 +54,6 @@ router.put('/me', isUser, async (req, res, next) => {
     const updates = Object.keys(req.body);
     updates.forEach((update) => (req.user[update] = req.body[update]));
 
-    await req.user.save({ validateBeforeSave: false });
-    res.send(req.user);
     const newEdit = await req.user.save({ validateBeforeSave: false });
     res.send(newEdit);
   } catch (error) {
@@ -232,9 +230,6 @@ router.post('/login', async (req, res, next) => {
     if (user) {
       const token = await generateToken(user);
       res.cookie('token', token.token, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure: true,
         // httpOnly: true,
         // sameSite: 'none',
         // secure: true,
