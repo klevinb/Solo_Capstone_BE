@@ -11,6 +11,7 @@ paypal.configure({
   client_secret: process.env.PAYPAL_SECRET,
 });
 
+// route for paypal payment for events
 router.post('/buyEvent/:eventId', isUser, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
@@ -21,8 +22,13 @@ router.post('/buyEvent/:eventId', isUser, async (req, res, next) => {
           payment_method: 'paypal',
         },
         redirect_urls: {
-          return_url: 'http://localhost:3005/api/events/paypal?success',
-          cancel_url: 'http://localhost:3000/',
+          return_url:
+            process.env.BACKEND_URL +
+            '/api/events/paypal?eventId=' +
+            req.params.eventId +
+            '&userId=' +
+            req.user._id,
+          cancel_url: process.env.FRONTEND_URL,
         },
         transactions: [
           {
@@ -64,28 +70,28 @@ router.post('/buyEvent/:eventId', isUser, async (req, res, next) => {
   }
 });
 
-router.get('/paypal', isUser, async (req, res, next) => {
+// paypal call back payment
+router.get('/paypal', async (req, res, next) => {
   try {
-    console.log(req.query.PayerID, req.query.paymentId);
-    const { success, cancel } = req.query;
-    console.log(success, cancel);
     const execute_payment_json = {
       payer_id: req.query.PayerID,
     };
 
     const paymentId = req.query.paymentId;
 
-    paypal.payment.execute(paymentId, execute_payment_json, function (
+    paypal.payment.execute(paymentId, execute_payment_json, async function (
       error,
       payment
     ) {
       if (error) {
-        console.log(error.response);
         throw error;
       } else {
-        console.log('Get Payment Response');
-        console.log(JSON.stringify(payment));
-        res.redirect(process.env.FRONTEND_URL + '/events');
+        try {
+          await EventModel.addParticipant(req.query.eventId, req.query.userId);
+        } catch (error) {
+          console.log(error);
+        }
+        res.redirect(process.env.FRONTEND_URL + '/');
       }
     });
   } catch (error) {
@@ -94,6 +100,7 @@ router.get('/paypal', isUser, async (req, res, next) => {
   }
 });
 
+// route that adds user as a participant to the event
 router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
   try {
     const user = await EventModel.checkParticipants(
@@ -111,6 +118,8 @@ router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
     next(error);
   }
 });
+
+// route that removes user from a participants list at the event
 router.post(
   '/:eventId/removeParticipant/:userId',
   isUser,
@@ -137,6 +146,7 @@ router.post(
   }
 );
 
+// route that gets all the events
 router.get('/', isUser, async (req, res, next) => {
   try {
     const query = q2m(req.query);
@@ -174,6 +184,7 @@ router.get('/', isUser, async (req, res, next) => {
   }
 });
 
+// route that gets 3 events even when they are not users
 router.get('/notUser', async (req, res, next) => {
   try {
     const events = await EventModel.find({});
@@ -187,6 +198,7 @@ router.get('/notUser', async (req, res, next) => {
   }
 });
 
+// route that return a specific event
 router.get('/:eventId', isUser, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
@@ -204,6 +216,7 @@ router.get('/:eventId', isUser, async (req, res, next) => {
   }
 });
 
+// route that edits a specific event
 router.put('/:eventId', isUser, isAdmin, async (req, res, next) => {
   try {
     delete req.body._id;
@@ -223,6 +236,7 @@ router.put('/:eventId', isUser, isAdmin, async (req, res, next) => {
   }
 });
 
+// route for creating new event
 router.post('/', isUser, isAdmin, async (req, res, next) => {
   try {
     const newEvent = new EventModel(req.body);
@@ -234,6 +248,7 @@ router.post('/', isUser, isAdmin, async (req, res, next) => {
   }
 });
 
+// route for deleting a specific event
 router.delete('/:eventId', isUser, isAdmin, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
