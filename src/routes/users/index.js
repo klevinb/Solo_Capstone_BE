@@ -56,6 +56,18 @@ router.put('/me', isUser, async (req, res, next) => {
 
     await req.user.save({ validateBeforeSave: false });
     res.send(req.user);
+router.post('/me/oldPassword', isUser, async (req, res, next) => {
+  try {
+    const oldPassword = req.body.password;
+    const user = await UserModel.findByCredentials(
+      req.user.username,
+      oldPassword
+    );
+    if (!user) {
+      res.status(404).send('Password is not the same!');
+    } else {
+      res.sendStatus(200);
+    }
   } catch (error) {
     next(error);
   }
