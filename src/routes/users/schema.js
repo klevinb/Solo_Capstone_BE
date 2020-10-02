@@ -83,6 +83,7 @@ const UserSchema = new Schema({
     type: String,
   },
   stories: [{ type: String }],
+  events: [{ type: Schema.Types.ObjectId, ref: 'Event' }],
 });
 
 UserSchema.pre('save', async function (next) {
