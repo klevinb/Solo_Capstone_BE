@@ -15,7 +15,6 @@ const isUser = async (req, res, next) => {
       } else {
         const user = await ProfileModel.findOne({
           _id: credentials._id,
-          token: token,
         })
           .populate('followers', ['name', 'surname', 'image'])
           .populate('events');
