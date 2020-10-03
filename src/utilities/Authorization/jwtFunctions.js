@@ -1,26 +1,27 @@
 const jwt = require('jsonwebtoken');
 const UserModel = require('../../routes/users/schema');
 
-const generateToken = async (user) => {
+const generateTokens = async (user) => {
   try {
-    const token = await jwtCreator({ _id: user._id });
-    const updateUser = await UserModel.findById(user._id);
+    const accessToken = await jwtToken({ _id: user._id });
+    const refreshToken = await jwtRefreshToken({ _id: user._id });
 
-    updateUser.token = token;
-    await updateUser.save({ validateModifiedOnly: true });
-    return { token };
+    user.refreshTokens = user.refreshTokens.concat({ token: refreshToken });
+    await user.save({ validateModifiedOnly: true });
+
+    return { token: accessToken, refreshToken: refreshToken };
   } catch (error) {
     console.log(error);
     throw new Error(error);
   }
 };
 
-const jwtCreator = (payload) =>
+const jwtToken = (payload) =>
   new Promise((res, rej) =>
     jwt.sign(
       payload,
       process.env.SECRET_KEY,
-      { expiresIn: 28800 },
+      { expiresIn: 900 },
       (err, token) => {
         if (err) rej(err);
         res(token);
@@ -43,7 +44,66 @@ const jwtVerifier = (payload) =>
     })
   );
 
+const jwtRefreshToken = (payload) =>
+  new Promise((res, rej) =>
+    jwt.sign(
+      payload,
+      process.env.REFRESH_SECRET_KEY,
+      { expiresIn: 604800 },
+      (err, token) => {
+        if (err) rej(err);
+        res(token);
+      }
+    )
+  );
+
+const jwtRefreshTokenVerify = (token) =>
+  new Promise((res, rej) =>
+    jwt.verify(token, process.env.REFRESH_SECRET_KEY, (err, credentials) => {
+      if (err) {
+        rej(err);
+      } else {
+        res(credentials);
+      }
+    })
+  );
+
+const refreshToken = async (oldRefreshToken) => {
+  try {
+    //verify the refreshtoken
+    const credentials = await jwtRefreshTokenVerify(oldRefreshToken);
+
+    const user = await UserModel.findById(credentials._id);
+    if (!user) {
+      throw new Error('Access is forbiden');
+    }
+
+    const currentRefreshToken = user.refreshTokens.find(
+      (token) => token.token === oldRefreshToken
+    );
+
+    if (!currentRefreshToken) {
+      throw new Error('Refresh token is wrong');
+    }
+
+    const newAccessToken = await jwtToken({ _id: user._id });
+    const refreshToken = await jwtRefreshToken({ _id: user._id });
+
+    const newRefreshTokens = user.refreshTokens
+      .filter((token) => token.token !== oldRefreshToken)
+      .concat({ token: refreshToken });
+
+    user.refreshTokens = [...newRefreshTokens];
+    await user.save({ validateModifiedOnly: true });
+
+    return { token: newAccessToken, refreshToken: refreshToken };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
-  generateToken,
+  generateTokens,
   jwtVerifier,
+  refreshToken,
 };
