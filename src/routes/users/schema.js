@@ -79,9 +79,14 @@ const UserSchema = new Schema({
     type: String,
     enum: ['admin', 'user'],
   },
-  token: {
-    type: String,
-  },
+  refreshTokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   stories: [{ type: String }],
   events: [{ type: Schema.Types.ObjectId, ref: 'Event' }],
 });

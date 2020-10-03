@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const UserModel = require('./schema');
 const EventModel = require('../events/schema');
-const { generateToken } = require('../../utilities/Authorization/jwtFunctions');
+const {
+  generateTokens,
+  refreshToken,
+} = require('../../utilities/Authorization/jwtFunctions');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
 const schedule = require('node-schedule');
 const {
@@ -228,8 +231,13 @@ router.post('/login', async (req, res, next) => {
     const user = await UserModel.findByCredentials(credentials, password);
 
     if (user) {
-      const token = await generateToken(user);
-      res.cookie('token', token.token, {
+      const tokens = await generateTokens(user);
+      res.cookie('token', tokens.token, {
+        // httpOnly: true,
+        // sameSite: 'none',
+        // secure: true,
+      });
+      res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
         // sameSite: 'none',
         // secure: true,
@@ -249,7 +257,10 @@ router.post('/login', async (req, res, next) => {
 
 router.post('/logout', isUser, async (req, res, next) => {
   try {
-    req.user.token = '';
+    req.user.refreshTokens = req.user.refreshTokens.filter(
+      (token) => token.token !== req.cookies.refreshToken
+    );
+
     await req.user.save({ validateBeforeSave: false });
 
     res.redirect('/');
@@ -266,6 +277,34 @@ router.post('/register', async (req, res, next) => {
   } catch (error) {
     console.log(error);
     next(error);
+  }
+});
+
+router.post('/refreshTokens', async (req, res, next) => {
+  const oldRefreshToken = req.cookies.refreshToken;
+  if (!oldRefreshToken) {
+    const err = new Error('Forbidden');
+    err.httpStatusCode = 403;
+    next(err);
+  } else {
+    try {
+      const tokens = await refreshToken(oldRefreshToken);
+      res.cookie('token', tokens.token, {
+        // httpOnly: true,
+        // sameSite: 'none',
+        // secure: true,
+      });
+      res.cookie('refreshToken', tokens.refreshToken, {
+        // httpOnly: true,
+        // sameSite: 'none',
+        // secure: true,
+      });
+      res.sendStatus(200);
+    } catch (error) {
+      const err = new Error(error);
+      err.httpStatusCode = 401;
+      next(err);
+    }
   }
 });
 
