@@ -207,12 +207,12 @@ router.post('/login', async (req, res, next) => {
       res.cookie('token', tokens.token, {
         // httpOnly: true,
         sameSite: 'none',
-        // secure: true,
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
         sameSite: 'none',
-        // secure: true,
+        secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -265,12 +265,12 @@ router.post('/refreshTokens', async (req, res, next) => {
       res.cookie('token', tokens.token, {
         // httpOnly: true,
         sameSite: 'none',
-        // secure: true,
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
         sameSite: 'none',
-        // secure: true,
+        secure: true,
       });
       res.sendStatus(200);
     } catch (error) {
@@ -296,7 +296,7 @@ router.get(
       res.cookie('token', token, {
         // httpOnly: true,
         sameSite: 'none',
-        // secure: true,
+        secure: true,
       });
 
       res.writeHead(301, {
