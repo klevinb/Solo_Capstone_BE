@@ -206,13 +206,13 @@ router.post('/login', async (req, res, next) => {
       const tokens = await generateTokens(user);
       res.cookie('token', tokens.token, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -264,13 +264,13 @@ router.post('/refreshTokens', async (req, res, next) => {
       const tokens = await refreshToken(oldRefreshToken);
       res.cookie('token', tokens.token, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } catch (error) {
@@ -295,8 +295,8 @@ router.get(
       const token = req.user.token;
       res.cookie('token', token, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
 
       res.writeHead(301, {
