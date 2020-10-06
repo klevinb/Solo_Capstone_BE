@@ -7,7 +7,6 @@ const {
   refreshToken,
 } = require('../../utilities/Authorization/jwtFunctions');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
-const schedule = require('node-schedule');
 const {
   generatePdfWithPhoto,
   generatePdf,
@@ -28,13 +27,10 @@ cloudinary.config({
 
 const upload = multer();
 
-schedule.scheduleJob('* */24 * * *', async function () {
-  await UserModel.collection.updateMany({}, { $set: { stories: [] } });
-});
-
 // logged-in user routes
 router.get('/', isUser, async (req, res, next) => {
   try {
+    console.log('HERE');
     const users = await UserModel.find({});
     res.status(200).send(users);
   } catch (error) {
@@ -102,43 +98,19 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
-router.post(
-  '/me/story',
-  upload.single('story'),
-  isUser,
-  async (req, res, next) => {
-    try {
-      try {
-        if (req.file) {
-          const cld_upload_stream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'stories',
-            },
-            async (err, result) => {
-              if (!err) {
-                req.user.stories.push(result.secure_url);
-                await req.user.save({ validateBeforeSave: false });
-
-                res.status(200).send('Done');
-              }
-            }
-          );
-          streamifier.createReadStream(req.file.buffer).pipe(cld_upload_stream);
-        } else {
-          const err = new Error();
-          err.httpStatusCode = 400;
-          err.message = 'Image file missing!';
-          next(err);
-        }
-      } catch (error) {
-        next(error);
-      }
-    } catch (error) {
-      console.log(error);
-      next(error);
+router.post('/follow/:userId', isUser, async (req, res, next) => {
+  try {
+    const user = await UserModel.followToggle(req.user, req.params.userId);
+    if (user) {
+      res.status(200).json('Followed');
+    } else {
+      res.status(200).json('Unfollowed');
     }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-);
+});
 
 // Azure storage for photos with MulterAzureStorage
 
@@ -272,8 +244,19 @@ router.post('/logout', isUser, async (req, res, next) => {
 router.post('/register', async (req, res, next) => {
   try {
     const newUser = new UserModel(req.body);
-    const { _id } = await newUser.save();
-    res.status(201).send(_id);
+    const user = await newUser.save();
+    const tokens = await generateTokens(user);
+    res.cookie('token', tokens.token, {
+      // httpOnly: true,
+      // sameSite: 'none',
+      // secure: true,
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      // httpOnly: true,
+      // sameSite: 'none',
+      // secure: true,
+    });
+    res.status(201).send(user._id);
   } catch (error) {
     console.log(error);
     next(error);
