@@ -78,6 +78,7 @@ const UserSchema = new Schema({
   role: {
     type: String,
     enum: ['admin', 'user'],
+    default: 'user',
   },
   refreshTokens: [
     {
@@ -87,8 +88,8 @@ const UserSchema = new Schema({
       },
     },
   ],
-  stories: [{ type: String }],
   events: [{ type: Schema.Types.ObjectId, ref: 'Event' }],
+  following: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
 });
 
 UserSchema.pre('save', async function (next) {
@@ -110,13 +111,27 @@ UserSchema.statics.findByCredentials = async (credentials, password) => {
   } else return null;
 };
 
+UserSchema.statics.followToggle = async (user, userId) => {
+  const findUser = user.following.filter((user) => user._id == userId);
+
+  if (findUser.length !== 0) {
+    user.following.pull(userId);
+    await user.save({ validateBeforeSave: false });
+    return null;
+  } else {
+    user.following.push(userId);
+    await user.save({ validateBeforeSave: false });
+    return userId;
+  }
+};
+
 UserSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject();
 
   delete userObject.password;
   delete userObject.__v;
-  delete userObject.token;
+  delete userObject.refreshTokens;
 
   return userObject;
 };

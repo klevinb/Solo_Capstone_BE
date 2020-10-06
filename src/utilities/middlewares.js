@@ -16,8 +16,8 @@ const isUser = async (req, res, next) => {
         const user = await ProfileModel.findOne({
           _id: credentials._id,
         })
-          .populate('followers', ['name', 'surname', 'image'])
-          .populate('events');
+          .populate('events')
+          .populate('following', ['name', 'surname', 'image']);
 
         if (user) {
           req.user = user;
