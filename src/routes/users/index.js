@@ -263,14 +263,14 @@ router.post('/refreshTokens', async (req, res, next) => {
     try {
       const tokens = await refreshToken(oldRefreshToken);
       res.cookie('token', tokens.token, {
-        // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
-        // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.sendStatus(200);
     } catch (error) {

@@ -20,8 +20,8 @@ const corsOpt = {
   credentials: true,
 };
 
-app.use(cors(corsOpt));
 const server = http.createServer(app);
+server.use(cors(corsOpt));
 
 socketio(server);
 
