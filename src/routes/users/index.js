@@ -205,14 +205,14 @@ router.post('/login', async (req, res, next) => {
     if (user) {
       const tokens = await generateTokens(user);
       res.cookie('token', tokens.token, {
-        // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
-        // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -245,17 +245,7 @@ router.post('/register', async (req, res, next) => {
   try {
     const newUser = new UserModel(req.body);
     const user = await newUser.save();
-    const tokens = await generateTokens(user);
-    res.cookie('token', tokens.token, {
-      // httpOnly: true,
-      // sameSite: 'none',
-      // secure: true,
-    });
-    res.cookie('refreshToken', tokens.refreshToken, {
-      // httpOnly: true,
-      // sameSite: 'none',
-      // secure: true,
-    });
+
     res.status(201).send(user._id);
   } catch (error) {
     console.log(error);
