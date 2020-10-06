@@ -41,9 +41,9 @@ app.use(genericError);
 
 console.log(listEndpoints(app));
 
-// process.env.MONGOOSE_CONNECTION_STRING
+// 'mongodb://localhost:27017/Solo_Capstone'
 mongoose
-  .connect('mongodb://localhost:27017/Solo_Capstone', {
+  .connect(process.env.MONGOOSE_CONNECTION_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: true,
