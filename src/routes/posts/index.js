@@ -88,6 +88,7 @@ router.delete('/:postId', isUser, async (req, res, next) => {
     const post = await PostModel.findById(req.params.postId);
     if (post) {
       await PostModel.findByIdAndDelete(req.params.postId);
+      res.status(200).send('OK');
     } else {
       const err = new Error('Post does not exists!');
       err.httpStatusCode = 404;

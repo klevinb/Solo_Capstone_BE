@@ -17,7 +17,7 @@ const isUser = async (req, res, next) => {
           _id: credentials._id,
         })
           .populate('events')
-          .populate('following', ['name', 'surname', 'image']);
+          .populate('following', ['name', 'surname', 'image', 'username']);
 
         if (user) {
           req.user = user;
