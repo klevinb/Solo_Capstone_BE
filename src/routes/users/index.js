@@ -205,13 +205,13 @@ router.post('/login', async (req, res, next) => {
       const tokens = await generateTokens(user);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -254,6 +254,7 @@ router.post('/register', async (req, res, next) => {
 
 router.post('/refreshTokens', async (req, res, next) => {
   const oldRefreshToken = req.cookies.refreshToken;
+
   if (!oldRefreshToken) {
     const err = new Error('Forbidden');
     err.httpStatusCode = 403;
@@ -263,16 +264,17 @@ router.post('/refreshTokens', async (req, res, next) => {
       const tokens = await refreshToken(oldRefreshToken);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        sameSite: 'none',
+        secure: true,
       });
       res.sendStatus(200);
     } catch (error) {
+      console.log(error);
       const err = new Error(error);
       err.httpStatusCode = 401;
       next(err);
@@ -294,8 +296,8 @@ router.get(
       const token = req.user.token;
       res.cookie('token', token, {
         // httpOnly: true,
-        // sameSite: 'none',
-        // secure: true,
+        sameSite: 'none',
+        secure: true,
       });
 
       res.writeHead(301, {
