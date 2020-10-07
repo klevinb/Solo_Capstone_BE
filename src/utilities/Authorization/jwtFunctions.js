@@ -57,22 +57,14 @@ const jwtRefreshToken = (payload) =>
     )
   );
 
-const jwtRefreshTokenVerify = (token) =>
-  new Promise((res, rej) =>
-    jwt.verify(token, process.env.REFRESH_SECRET_KEY, (err, credentials) => {
-      if (err) {
-        rej(err);
-      } else {
-        res(credentials);
-      }
-    })
-  );
-
 const refreshToken = async (oldRefreshToken) => {
   try {
     //verify the refreshtoken
     const credentials = await jwtRefreshTokenVerify(oldRefreshToken);
 
+    if (!credentials) {
+      throw Error();
+    }
     const user = await UserModel.findById(credentials._id);
     if (!user) {
       throw new Error('Access is forbiden');
@@ -85,22 +77,22 @@ const refreshToken = async (oldRefreshToken) => {
     if (!currentRefreshToken) {
       throw new Error('Refresh token is wrong');
     }
-
     const newAccessToken = await jwtToken({ _id: user._id });
-    const refreshToken = await jwtRefreshToken({ _id: user._id });
 
-    const newRefreshTokens = user.refreshTokens
-      .filter((token) => token.token !== oldRefreshToken)
-      .concat({ token: refreshToken });
-
-    user.refreshTokens = [...newRefreshTokens];
-    await user.save({ validateModifiedOnly: true });
-
-    return { token: newAccessToken, refreshToken: refreshToken };
+    return { token: newAccessToken, refreshToken: oldRefreshToken };
   } catch (error) {
     console.log(error);
+    throw Error();
   }
 };
+
+const jwtRefreshTokenVerify = (token) =>
+  new Promise((res, rej) =>
+    jwt.verify(token, process.env.REFRESH_SECRET_KEY, (err, credentials) => {
+      if (err) rej(err);
+      res(credentials);
+    })
+  );
 
 module.exports = {
   generateTokens,
