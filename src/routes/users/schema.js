@@ -65,7 +65,7 @@ const UserSchema = new Schema({
         if (!npmValidator.isEmail(value)) {
           throw new Error('Email is invalid!');
         } else {
-          const checkEmail = await UserModel.findOne({ email: value });
+          const checkEmail = await ProfileModel.findOne({ email: value });
           if (checkEmail) throw new Error('Email already exists!');
         }
       },
@@ -90,6 +90,19 @@ const UserSchema = new Schema({
   ],
   events: [{ type: Schema.Types.ObjectId, ref: 'Event' }],
   following: [{ type: Schema.Types.ObjectId, ref: 'Profile' }],
+  messages: [
+    {
+      username: {
+        type: String,
+        require: true,
+      },
+      count: {
+        type: Number,
+        require: true,
+        default: 0,
+      },
+    },
+  ],
 });
 
 UserSchema.pre('save', async function (next) {
@@ -101,7 +114,7 @@ UserSchema.pre('save', async function (next) {
 });
 
 UserSchema.statics.findByCredentials = async (credentials, password) => {
-  const find = await UserModel.findOne({
+  const find = await ProfileModel.findOne({
     $or: [{ username: credentials }, { email: credentials }],
   });
   if (find) {
@@ -112,7 +125,7 @@ UserSchema.statics.findByCredentials = async (credentials, password) => {
 };
 
 UserSchema.statics.followToggle = async (user, username) => {
-  const findUser = await UserModel.findOne({ username });
+  const findUser = await ProfileModel.findOne({ username });
   const iFollow = user.following.filter(
     (user) => user._id.toString() === findUser._id.toString()
   );
@@ -139,6 +152,6 @@ UserSchema.methods.toJSON = function () {
   return userObject;
 };
 
-const UserModel = mongoose.model('Profile', UserSchema);
+const ProfileModel = mongoose.model('Profile', UserSchema);
 
-module.exports = UserModel;
+module.exports = ProfileModel;
