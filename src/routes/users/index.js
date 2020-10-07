@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const UserModel = require('./schema');
+const ProfileModel = require('./schema');
 const EventModel = require('../events/schema');
 const {
   generateTokens,
@@ -30,7 +30,7 @@ const upload = multer();
 // logged-in user routes
 router.get('/', isUser, async (req, res, next) => {
   try {
-    const users = await UserModel.find({});
+    const users = await ProfileModel.find({});
     res.status(200).send(users);
   } catch (error) {
     next(error);
@@ -62,7 +62,7 @@ router.put('/me', isUser, async (req, res, next) => {
 router.post('/me/oldPassword', isUser, async (req, res, next) => {
   try {
     const oldPassword = req.body.password;
-    const user = await UserModel.findByCredentials(
+    const user = await ProfileModel.findByCredentials(
       req.user.username,
       oldPassword
     );
@@ -99,7 +99,7 @@ router.delete('/me/photo', isUser, async (req, res) => {
 
 router.post('/follow/:username', isUser, async (req, res, next) => {
   try {
-    const user = await UserModel.followToggle(req.user, req.params.username);
+    const user = await ProfileModel.followToggle(req.user, req.params.username);
     if (user) {
       res.status(200).json('Followed');
     } else {
@@ -150,7 +150,7 @@ router.post(
 
 router.get('/:username', isUser, isAdmin, async (req, res, next) => {
   try {
-    const user = await UserModel.findOne({
+    const user = await ProfileModel.findOne({
       username: req.params.username,
     }).populate('followers');
     if (user) res.status(200).send(user);
@@ -166,7 +166,7 @@ router.put('/:username', isUser, isAdmin, async (req, res, next) => {
     delete req.body.username;
     delete req.body.email;
 
-    const user = await UserModel.findOne({ username: req.params.username });
+    const user = await ProfileModel.findOne({ username: req.params.username });
     if (user) {
       const updates = Object.keys(req.body);
       updates.forEach((update) => (user[update] = req.body[update]));
@@ -181,7 +181,7 @@ router.put('/:username', isUser, isAdmin, async (req, res, next) => {
 
 router.delete('/:username', isUser, isAdmin, async (req, res, next) => {
   try {
-    const user = await UserModel.findOne({ username: req.params.username });
+    const user = await ProfileModel.findOne({ username: req.params.username });
 
     if (user) {
       await user.remove();
@@ -199,7 +199,7 @@ router.post('/login', async (req, res, next) => {
   try {
     const { credentials, password } = req.body;
 
-    const user = await UserModel.findByCredentials(credentials, password);
+    const user = await ProfileModel.findByCredentials(credentials, password);
 
     if (user) {
       const tokens = await generateTokens(user);
@@ -242,7 +242,7 @@ router.post('/logout', isUser, async (req, res, next) => {
 
 router.post('/register', async (req, res, next) => {
   try {
-    const newUser = new UserModel(req.body);
+    const newUser = new ProfileModel(req.body);
     const user = await newUser.save();
 
     res.status(201).send(user._id);
