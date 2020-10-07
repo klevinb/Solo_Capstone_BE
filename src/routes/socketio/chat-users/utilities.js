@@ -1,4 +1,6 @@
 const UserModel = require('./schema');
+const ProfileModel = require('../../users/schema');
+const { find } = require('../../users/schema');
 
 const getUsers = async () => {
   const users = await UserModel.find();
@@ -25,8 +27,50 @@ const setUsername = async (username, socketId) => {
   return await getUsers();
 };
 
+const addMessage = async (username, refUser) => {
+  const findUser = await ProfileModel.findOne({ username });
+  if (findUser) {
+    const msgFromUser = findUser.messages.find(
+      (user) => user.username === refUser
+    );
+    if (msgFromUser) {
+      await ProfileModel.findOneAndUpdate(
+        { username, 'messages.username': refUser },
+        {
+          $inc: { 'messages.$.count': 1 },
+        }
+      );
+    } else {
+      findUser.messages.push({ username: refUser, count: 1 });
+      await findUser.save({ validateBeforeSave: false });
+    }
+  }
+};
+
+const clearMsgCount = async (username, refUser) => {
+  const findUser = await ProfileModel.findOne({ username });
+  if (findUser) {
+    const msgFromUser = findUser.messages.find(
+      (user) => user.username === refUser
+    );
+    if (msgFromUser) {
+      await ProfileModel.findOneAndUpdate(
+        { username, 'messages.username': refUser },
+        {
+          $set: { 'messages.$.count': 0 },
+        }
+      );
+    } else {
+      findUser.messages.push({ username: refUser, count: 1 });
+      await findUser.save({ validateBeforeSave: false });
+    }
+  }
+};
+
 module.exports = {
   getUsers,
   setUsername,
   removeUser,
+  addMessage,
+  clearMsgCount,
 };

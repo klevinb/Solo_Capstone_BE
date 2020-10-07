@@ -1,6 +1,12 @@
 const socketio = require('socket.io');
 const MessageModel = require('./messages/schema');
-const { getUsers, setUsername, removeUser } = require('./chat-users/utilities');
+const {
+  getUsers,
+  setUsername,
+  removeUser,
+  addMessage,
+  clearMsgCount,
+} = require('./chat-users/utilities');
 
 const chat = (server) => {
   const io = socketio(server);
@@ -11,6 +17,22 @@ const chat = (server) => {
       const usernames = users.map((user) => user.username);
 
       io.emit('online', usernames);
+    });
+
+    socket.on('clearMsgCount', async ({ username, refUser }) => {
+      const onlineUsers = await getUsers();
+      await clearMsgCount(username, refUser);
+
+      const findUser = onlineUsers.find((user) => user.username === refUser);
+
+      if (!findUser) {
+        const err = new Error();
+        err.httpStatusCode = 404;
+        err.message = 'User not found!';
+        throw err;
+      }
+
+      io.to(findUser.socketId).emit('clearMsgCount');
     });
 
     socket.on('sendMessage', async (message) => {
@@ -29,6 +51,8 @@ const chat = (server) => {
         err.message = 'User not found!';
         throw err;
       }
+
+      await addMessage(saveMessage.from, saveMessage.to);
 
       io.to(findUser.socketId).emit('message', {
         from: saveMessage.from,
