@@ -111,17 +111,20 @@ UserSchema.statics.findByCredentials = async (credentials, password) => {
   } else return null;
 };
 
-UserSchema.statics.followToggle = async (user, userId) => {
-  const findUser = user.following.filter((user) => user._id == userId);
+UserSchema.statics.followToggle = async (user, username) => {
+  const findUser = await UserModel.findOne({ username });
+  const iFollow = user.following.filter(
+    (user) => user._id.toString() === findUser._id.toString()
+  );
 
-  if (findUser.length !== 0) {
-    user.following.pull(userId);
+  if (iFollow.length !== 0) {
+    user.following.pull(findUser._id);
     await user.save({ validateBeforeSave: false });
     return null;
   } else {
-    user.following.push(userId);
+    user.following.push(findUser._id);
     await user.save({ validateBeforeSave: false });
-    return userId;
+    return username;
   }
 };
 

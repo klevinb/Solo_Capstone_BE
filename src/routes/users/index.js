@@ -30,7 +30,6 @@ const upload = multer();
 // logged-in user routes
 router.get('/', isUser, async (req, res, next) => {
   try {
-    console.log('HERE');
     const users = await UserModel.find({});
     res.status(200).send(users);
   } catch (error) {
@@ -98,9 +97,9 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
-router.post('/follow/:userId', isUser, async (req, res, next) => {
+router.post('/follow/:username', isUser, async (req, res, next) => {
   try {
-    const user = await UserModel.followToggle(req.user, req.params.userId);
+    const user = await UserModel.followToggle(req.user, req.params.username);
     if (user) {
       res.status(200).json('Followed');
     } else {
@@ -206,13 +205,13 @@ router.post('/login', async (req, res, next) => {
       const tokens = await generateTokens(user);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -264,13 +263,13 @@ router.post('/refreshTokens', async (req, res, next) => {
       const tokens = await refreshToken(oldRefreshToken);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } catch (error) {
@@ -295,8 +294,8 @@ router.get(
       const token = req.user.token;
       res.cookie('token', token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
 
       res.writeHead(301, {
@@ -375,6 +374,23 @@ router.post('/:eventId/pdf', isUser, async (req, res, next) => {
       err.httpStatusCode = 404;
       next(err);
     }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+router.post('/send/question', async (req, res, next) => {
+  try {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    sgMail.send({
+      to: `${req.body.email}`,
+      from: 'support@yolo.com',
+      subject: 'Questions Team',
+      text: `${req.body.name} thanks for contacting us. We will send you an answer ASAP! YOLO TEAM`,
+    });
+
+    res.status(201).send('Sent');
   } catch (error) {
     console.log(error);
     next(error);
