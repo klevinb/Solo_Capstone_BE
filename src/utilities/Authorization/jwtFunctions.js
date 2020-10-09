@@ -64,22 +64,23 @@ const refreshToken = async (oldRefreshToken) => {
 
     if (!credentials) {
       throw Error();
-    }
-    const user = await UserModel.findById(credentials._id);
-    if (!user) {
-      throw new Error('Access is forbiden');
-    }
+    } else {
+      const user = await UserModel.findById(credentials._id);
+      if (!user) {
+        throw new Error('Access is forbiden');
+      }
 
-    const currentRefreshToken = user.refreshTokens.find(
-      (token) => token.token === oldRefreshToken
-    );
+      const currentRefreshToken = user.refreshTokens.find(
+        (token) => token.token === oldRefreshToken
+      );
 
-    if (!currentRefreshToken) {
-      throw new Error('Refresh token is wrong');
+      if (!currentRefreshToken) {
+        throw new Error('Refresh token is wrong');
+      }
+      const newAccessToken = await jwtToken({ _id: user._id });
+
+      return { token: newAccessToken, refreshToken: oldRefreshToken };
     }
-    const newAccessToken = await jwtToken({ _id: user._id });
-
-    return { token: newAccessToken, refreshToken: oldRefreshToken };
   } catch (error) {
     console.log(error);
     throw Error();
