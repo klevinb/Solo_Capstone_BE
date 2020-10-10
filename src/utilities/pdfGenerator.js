@@ -14,7 +14,7 @@ const fonts = {
 };
 const printer = new pdfMakePrinter(fonts);
 
-const generatePdfWithPhoto = async (url, filename) => {
+const generatePdf = async (url, filename, event) => {
   const imgData = await fs.readFile(join(__dirname, '../../assets/logo.png'));
   const logoData = 'data:image/png;base64,' + imgData.toString('base64');
 
@@ -22,23 +22,54 @@ const generatePdfWithPhoto = async (url, filename) => {
     responseType: 'arraybuffer',
   });
   const image = new Buffer(response.data, 'base64');
+
   const docDefinition = {
     content: [
       {
         text: 'Event details!',
         style: 'header',
         alignment: 'center',
+        bold: true,
+        fontSize: 30,
+        marginBottom: 30,
       },
+      {
+        text: event.name,
+        bold: true,
+        fontSize: 15,
+        marginBottom: 30,
+      },
+
       {
         image: 'event',
         width: 510,
-        absolutePosition: { x: 40, y: 100 },
+        marginBottom: 50,
       },
       {
         image: 'logo',
         width: 100,
-        height: 100,
+        height: 80,
         absolutePosition: { x: 500, y: 5 },
+      },
+      {
+        columns: [
+          {
+            text: `Organizer : ${event.organizer}
+            Performer : ${event.performer}
+            `,
+            fontSize: 20,
+            width: 250,
+          },
+          {
+            width: '*',
+            text: `Date : ${event.startDate.toString().slice(0, 10)}
+            Description : ${event.description}
+            `,
+            fontSize: 20,
+          },
+        ],
+        // optional space between columns
+        columnGap: 10,
       },
     ],
     images: {
@@ -55,38 +86,6 @@ const generatePdfWithPhoto = async (url, filename) => {
   return pdfData;
 };
 
-const generatePdf = async (filename) => {
-  const imgData = await fs.readFile(join(__dirname, '../../assets/logo.png'));
-  const logoData = 'data:image/png;base64,' + imgData.toString('base64');
-
-  const docDefinition = {
-    content: [
-      {
-        text: 'Event details!',
-        style: 'header',
-        alignment: 'center',
-      },
-      {
-        image: 'logo',
-        width: 100,
-        height: 100,
-        absolutePosition: { x: 500, y: 5 },
-      },
-    ],
-    images: {
-      logo: logoData,
-    },
-  };
-  pdfDoc = printer.createPdfKitDocument(docDefinition);
-  pdfDoc.pipe(
-    fs.createWriteStream(join(__dirname, `../../assets/pdf/${filename}.pdf`))
-  );
-  pdfDoc.end();
-  const pdfData = join(__dirname, `../../assets/pdf/${filename}.pdf`);
-  return pdfData;
-};
-
 module.exports = {
-  generatePdfWithPhoto,
   generatePdf,
 };
