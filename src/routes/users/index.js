@@ -7,10 +7,7 @@ const {
   refreshToken,
 } = require('../../utilities/Authorization/jwtFunctions');
 const { isUser, isAdmin } = require('../../utilities/middlewares');
-const {
-  generatePdfWithPhoto,
-  generatePdf,
-} = require('../../utilities/pdfGenerator');
+const { generatePdf } = require('../../utilities/pdfGenerator');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const multer = require('multer');
@@ -313,64 +310,40 @@ router.get(
 
 // routes with Sendgrid to send user email with notifications
 
-router.post('/:eventId/pdf', isUser, async (req, res, next) => {
+router.post('/:eventId/pdf/:userId', async (req, res, next) => {
   try {
-    const event = await EventModel.findById(req.params.eventId);
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const event = await EventModel.findById(req.params.eventId);
+    const user = await ProfileModel.findById(req.params.userId);
+
+    console.log(user.email);
+
     if (event) {
-      if (event.image.length) {
-        const imageUrl = event.image[0];
-        const document = await generatePdfWithPhoto(imageUrl, req.body.email);
+      const imageUrl = event.image[0];
+      const document = await generatePdf(imageUrl, req.body.email, event);
 
-        const sendEmail = async () => {
-          fs.readFile(document, function (err, data) {
-            let data_base64 = data.toString('base64');
-            sgMail.send({
-              to: `${req.body.email}`,
-              from: 'events@yolo.com',
-              subject: 'Event Details',
-              text: `${req.user.name} thanks for booking our event! Below you will find informations about the event.`,
-              attachments: [
-                {
-                  filename: `EvenetDetails.pdf`,
-                  content: data_base64,
-                  type: 'application/pdf',
-                  disposition: 'attachment',
-                },
-              ],
-            });
+      const sendEmail = async () => {
+        fs.readFile(document, function (err, data) {
+          let data_base64 = data.toString('base64');
+          sgMail.send({
+            to: `${user.email}`,
+            from: 'events@yolo.com',
+            subject: 'Event Details',
+            text: `${user.name} thanks for booking our event! Below you will find informations about the event.`,
+            attachments: [
+              {
+                filename: `EvenetDetails.pdf`,
+                content: data_base64,
+                type: 'application/pdf',
+                disposition: 'attachment',
+              },
+            ],
           });
-          fs.unlink(document);
-        };
-        setTimeout(sendEmail, 1000);
-        res.status(201).send('Sent');
-      } else {
-        const document = await generatePdf(req.body.email);
-        console.log(document);
-
-        const sendEmail = async () => {
-          fs.readFile(document, function (err, data) {
-            let data_base64 = data.toString('base64');
-            sgMail.send({
-              to: `${req.body.email}`,
-              from: 'events@yolo.com',
-              subject: 'Event Details',
-              text: `${req.user.name} thanks for booking our event! Below you will find more informations.`,
-              attachments: [
-                {
-                  filename: `EventDetails.pdf`,
-                  content: data_base64,
-                  type: 'application/pdf',
-                  disposition: 'attachment',
-                },
-              ],
-            });
-          });
-          fs.unlink(document);
-        };
-        setTimeout(sendEmail, 1000);
-        res.status(201).send('Sent');
-      }
+        });
+        fs.unlink(document);
+      };
+      setTimeout(sendEmail, 1000);
+      res.status(201).send('Sent');
     } else {
       const err = new Error('There is no event with that ID!');
       err.httpStatusCode = 404;
