@@ -4,6 +4,7 @@ const EventModel = require('./schema');
 const q2m = require('query-to-mongo');
 const router = express.Router();
 const paypal = require('paypal-rest-sdk');
+const axios = require('axios');
 
 paypal.configure({
   mode: 'sandbox', //sandbox or live
@@ -88,31 +89,20 @@ router.get('/paypal', async (req, res, next) => {
       } else {
         try {
           await EventModel.addParticipant(req.query.eventId, req.query.userId);
+          await axios.post(
+            process.env.BACKEND_URL +
+              '/api/users/' +
+              req.query.eventId +
+              '/pdf' +
+              '/' +
+              req.query.userId
+          );
         } catch (error) {
           console.log(error);
         }
-        res.redirect(process.env.FRONTEND_URL + '/');
+        res.redirect(process.env.FRONTEND_URL + '/profile');
       }
     });
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-});
-
-// route that adds user as a participant to the event
-router.post('/:eventId/addParticipant', isUser, async (req, res, next) => {
-  try {
-    const user = await EventModel.checkParticipants(
-      req.params.eventId,
-      req.user._id
-    );
-    if (!user) {
-      await EventModel.addParticipant(req.params.eventId, req.user._id);
-      res.send('Added');
-    } else {
-      res.send('Already in Event');
-    }
   } catch (error) {
     console.log(error);
     next(error);
