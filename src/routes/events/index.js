@@ -97,10 +97,10 @@ router.get('/paypal', async (req, res, next) => {
               '/' +
               req.query.userId
           );
+          res.redirect(process.env.FRONTEND_URL + '/profile');
         } catch (error) {
           console.log(error);
         }
-        res.redirect(process.env.FRONTEND_URL + '/profile');
       }
     });
   } catch (error) {

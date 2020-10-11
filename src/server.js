@@ -25,7 +25,7 @@ app.use(cors(corsOpt));
 
 socketio(server);
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3005;
 
 app.use(express.json());
 app.use(cookieParser());
