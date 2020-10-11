@@ -89,20 +89,20 @@ router.get('/paypal', async (req, res, next) => {
       } else {
         try {
           await EventModel.addParticipant(req.query.eventId, req.query.userId);
-          // await axios.post(
-          //   process.env.BACKEND_URL +
-          //     '/api/users/' +
-          //     req.query.eventId +
-          //     '/pdf' +
-          //     '/' +
-          //     req.query.userId
-          // );
+          await axios.post(
+            process.env.BACKEND_URL +
+              '/api/users/' +
+              req.query.eventId +
+              '/pdf' +
+              '/' +
+              req.query.userId
+          );
         } catch (error) {
           console.log(error);
         }
       }
+      res.send('OK');
     });
-    res.redirect(process.env.FRONTEND_URL + '/profile');
   } catch (error) {
     console.log(error);
     next(error);

@@ -371,7 +371,7 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
         fs.unlink(document);
       };
       setTimeout(sendEmail, 1000);
-      res.status(201).send('Sent');
+      res.redirect(process.env.FRONTEND_URL + '/profile');
     } else {
       const err = new Error('There is no event with that ID!');
       err.httpStatusCode = 404;
