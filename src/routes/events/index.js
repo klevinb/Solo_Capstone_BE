@@ -101,8 +101,9 @@ router.get('/paypal', async (req, res, next) => {
           console.log(error);
         }
       }
-      res.send('OK');
     });
+    console.log(process.env.FRONTEND_URL + '/profile');
+    res.redirect(process.env.FRONTEND_URL + '/profile');
   } catch (error) {
     console.log(error);
     next(error);
