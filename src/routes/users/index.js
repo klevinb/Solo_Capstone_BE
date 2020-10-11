@@ -344,11 +344,9 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
     const event = await EventModel.findById(req.params.eventId);
     const user = await ProfileModel.findById(req.params.userId);
 
-    console.log(user.email);
-
     if (event) {
       const imageUrl = event.image[0];
-      const document = await generatePdf(imageUrl, req.body.email, event);
+      const document = await generatePdf(imageUrl, user.email, event);
 
       const sendEmail = async () => {
         fs.readFile(document, function (err, data) {
@@ -368,10 +366,9 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
             ],
           });
         });
-        fs.unlink(document);
       };
       setTimeout(sendEmail, 1000);
-      res.redirect(process.env.FRONTEND_URL + '/profile');
+      res.send('OK');
     } else {
       const err = new Error('There is no event with that ID!');
       err.httpStatusCode = 404;
