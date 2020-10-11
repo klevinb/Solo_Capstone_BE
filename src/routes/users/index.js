@@ -14,6 +14,7 @@ const multer = require('multer');
 const sgMail = require('@sendgrid/mail');
 const fs = require('fs-extra');
 const passport = require('passport');
+const axios = require('axios');
 
 // Cloudinary configuration
 cloudinary.config({
@@ -94,9 +95,36 @@ router.delete('/me/photo', isUser, async (req, res) => {
   res.send('DELETED');
 });
 
-router.post('/follow/:username', isUser, async (req, res, next) => {
+router.post('/:loggedInUser/followBack/:username', async (req, res, next) => {
   try {
-    const user = await ProfileModel.followToggle(req.user, req.params.username);
+    const user = await ProfileModel.followToggle(
+      req.params.loggedInUser,
+      req.params.username
+    );
+    if (user) {
+      res.status(200).json('Followed');
+    } else {
+      res.status(200).json('Unfollowed');
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+router.post('/:loggedInUser/follow/:username', async (req, res, next) => {
+  try {
+    const user = await ProfileModel.followToggle(
+      req.params.loggedInUser,
+      req.params.username
+    );
+    await axios.post(
+      process.env.BACKEND_URL +
+        '/api/users/' +
+        req.params.username +
+        '/followBack/' +
+        req.params.loggedInUser
+    );
     if (user) {
       res.status(200).json('Followed');
     } else {
@@ -202,13 +230,13 @@ router.post('/login', async (req, res, next) => {
       const tokens = await generateTokens(user);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } else {
@@ -261,13 +289,13 @@ router.post('/refreshTokens', async (req, res, next) => {
       const tokens = await refreshToken(oldRefreshToken);
       res.cookie('token', tokens.token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.cookie('refreshToken', tokens.refreshToken, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
       res.sendStatus(200);
     } catch (error) {
@@ -293,8 +321,8 @@ router.get(
       const token = req.user.token;
       res.cookie('token', token, {
         // httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        // sameSite: 'none',
+        // secure: true,
       });
 
       res.writeHead(301, {

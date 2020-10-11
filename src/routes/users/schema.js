@@ -126,17 +126,19 @@ UserSchema.statics.findByCredentials = async (credentials, password) => {
 
 UserSchema.statics.followToggle = async (user, username) => {
   const findUser = await ProfileModel.findOne({ username });
-  const iFollow = user.following.filter(
+  const loggedInUser = await ProfileModel.findOne({ username: user });
+
+  const iFollow = loggedInUser.following.filter(
     (user) => user._id.toString() === findUser._id.toString()
   );
 
   if (iFollow.length !== 0) {
-    user.following.pull(findUser._id);
-    await user.save({ validateBeforeSave: false });
+    loggedInUser.following.pull(findUser._id);
+    await loggedInUser.save({ validateBeforeSave: false });
     return null;
   } else {
-    user.following.push(findUser._id);
-    await user.save({ validateBeforeSave: false });
+    loggedInUser.following.push(findUser._id);
+    await loggedInUser.save({ validateBeforeSave: false });
     return username;
   }
 };
