@@ -16,6 +16,7 @@ paypal.configure({
 router.post('/buyEvent/:eventId', isUser, async (req, res, next) => {
   try {
     const event = await EventModel.findById(req.params.eventId);
+    await EventModel.addParticipant(req.params.eventId, req.user._id);
     if (event) {
       const create_payment_json = {
         intent: 'sale',
@@ -88,7 +89,6 @@ router.get('/paypal', async (req, res, next) => {
         throw error;
       } else {
         try {
-          await EventModel.addParticipant(req.query.eventId, req.query.userId);
           await axios.post(
             process.env.BACKEND_URL +
               '/api/users/' +
