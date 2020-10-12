@@ -4,6 +4,9 @@ const npmValidator = require('validator');
 const bcrypt = require('bcrypt');
 
 const UserSchema = new Schema({
+  facebookId: {
+    type: String,
+  },
   name: {
     type: String,
     required: true,

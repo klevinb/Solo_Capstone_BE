@@ -318,17 +318,25 @@ router.get(
   passport.authenticate('facebook'),
   async (req, res, next) => {
     try {
-      const token = req.user.token;
+      const { token, refreshToken } = req.user;
+
       res.cookie('token', token, {
         httpOnly: true,
         sameSite: 'none',
         secure: true,
       });
-
-      res.writeHead(301, {
-        Location: process.env.FRONTEND_URL + '/dashbord',
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
       });
-      res.end();
+
+      // res.writeHead(301, {
+      //   Location: process.env.FRONTEND_URL + '/profile',
+      // });
+
+      // res.end();
+      res.redirect(process.env.FRONTEND_URL + '/profile');
     } catch (error) {
       console.log(error);
       next(error);
@@ -355,7 +363,7 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
             to: `${user.email}`,
             from: 'events@yolo.com',
             subject: 'Event Details',
-            text: `${user.name} thanks for booking our event! Below you will find informations about the event.`,
+            text: `${user.name} thanks for joining our event! Below you will find more informations about it.`,
             attachments: [
               {
                 filename: `EvenetDetails.pdf`,
@@ -363,6 +371,7 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
                 type: 'application/pdf',
                 disposition: 'attachment',
               },
+              fs.unlink(document),
             ],
           });
         });

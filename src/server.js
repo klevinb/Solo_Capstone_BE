@@ -13,6 +13,8 @@ const {
   notFound,
   genericError,
 } = require('./utilities/errorHandlers');
+require('./utilities/Authorization/authorization');
+const passport = require('passport');
 
 const app = express();
 const corsOpt = {
@@ -29,6 +31,8 @@ const port = process.env.PORT || 3005;
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/api', apiRoutes);
 

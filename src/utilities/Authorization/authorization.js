@@ -1,7 +1,7 @@
 const passport = require('passport');
 const { Strategy } = require('passport-facebook');
 const UserModel = require('../../routes/users/schema');
-const { generateToken } = require('./jwtFunctions');
+const { generateTokens } = require('./jwtFunctions');
 
 passport.use(
   new Strategy(
@@ -31,20 +31,29 @@ passport.use(
         age: 18,
         favorite_drinks: [],
         interests: [],
-        birthday: ' ',
+        birthday: '',
         email: profile.emails[0].value,
         username:
           profile.name.givenName.toLocaleLowerCase() +
           profile.name.familyName.toLocaleLowerCase().slice(0, 1),
         image: '',
+        password: ' ',
+        events: [],
+        following: [],
+        messages: [],
         role: 'user',
         stories: [],
       };
+
       try {
         const findUser = await UserModel.findOne({ facebookId: profile.id });
         if (findUser) {
-          const token = await generateToken(findUser);
-          done(null, { token: token.token, username: findUser.username });
+          const tokens = await generateTokens(findUser);
+          done(null, {
+            token: tokens.token,
+            refreshToken: tokens.refreshToken,
+            username: findUser.username,
+          });
         } else {
           const checkUsername = await UserModel.findOne({
             username: User.username,
@@ -54,16 +63,21 @@ passport.use(
             checkUsername.facebookId = User.facebookId;
             await checkUsername.save({ validateBeforeSave: false });
 
-            const token = await generateToken(checkUsername);
+            const tokens = await generateTokens(checkUsername);
             done(null, {
-              token: token.token,
+              token: tokens.token,
+              refreshToken: tokens.refreshToken,
               username: checkUsername.username,
             });
           } else {
             const createUser = new UserModel(User);
             const user = await createUser.save();
-            const token = await generateToken(user);
-            done(null, { token: token.token, username: user.username });
+            const tokens = await generateTokens(user);
+            done(null, {
+              token: tokens.token,
+              refreshToken: tokens.refreshToken,
+              username: user.username,
+            });
           }
         }
       } catch (error) {
