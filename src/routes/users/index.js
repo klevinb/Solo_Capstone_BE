@@ -353,31 +353,29 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
     const user = await ProfileModel.findById(req.params.userId);
 
     if (event) {
-      const imageUrl = event.image[0];
-      const document = await generatePdf(imageUrl, user.email, event);
-
-      const sendEmail = async () => {
-        fs.readFile(document, function (err, data) {
-          let data_base64 = data.toString('base64');
-          sgMail.send({
-            to: `${user.email}`,
-            from: 'events@yolo.com',
-            subject: 'Event Details',
-            text: `${user.name} thanks for joining our event! Below you will find more informations about it.`,
-            attachments: [
-              {
-                filename: `EvenetDetails.pdf`,
-                content: data_base64,
-                type: 'application/pdf',
-                disposition: 'attachment',
-              },
-              fs.unlink(document),
-            ],
-          });
+      try {
+        const imageUrl = event.image[0];
+        const document = await generatePdf(imageUrl, user.email, event);
+        const data = await fs.readFile(document);
+        console.log(data);
+        await sgMail.send({
+          to: `${user.email}`,
+          from: 'events@yolo.com',
+          subject: 'Event Details',
+          text: `${user.name} thanks for joining our event! Below you will find more informations about it.`,
+          attachments: [
+            {
+              filename: `EventDetails.pdf`,
+              content: data.toString('base64'),
+              type: 'application/pdf',
+              disposition: 'attachment',
+            },
+          ],
         });
-      };
-      setTimeout(sendEmail, 1000);
-      res.send('OK');
+        await fs.unlink(document), res.send('OK');
+      } catch (error) {
+        console.log(error);
+      }
     } else {
       const err = new Error('There is no event with that ID!');
       err.httpStatusCode = 404;
