@@ -21,7 +21,7 @@ const jwtToken = (payload) =>
     jwt.sign(
       payload,
       process.env.SECRET_KEY,
-      { expiresIn: 900 },
+      { expiresIn: 9000 },
       (err, token) => {
         if (err) rej(err);
         res(token);
