@@ -61,7 +61,7 @@ const clearMsgCount = async (username, refUser) => {
         }
       );
     } else {
-      findUser.messages.push({ username: refUser, count: 1 });
+      findUser.messages.push({ username: refUser, count: 0 });
       await findUser.save({ validateBeforeSave: false });
     }
   }
