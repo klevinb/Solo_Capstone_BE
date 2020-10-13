@@ -46,28 +46,31 @@ passport.use(
       };
 
       try {
-        const findUser = await UserModel.findOne({ facebookId: profile.id });
-        if (findUser) {
-          const tokens = await generateTokens(findUser);
+        const findFacebookId = await UserModel.findOne({
+          facebookId: profile.id,
+        });
+        if (findFacebookId) {
+          const tokens = await generateTokens(findFacebookId);
           done(null, {
             token: tokens.token,
             refreshToken: tokens.refreshToken,
-            username: findUser.username,
+            username: findFacebookId.username,
           });
         } else {
-          const checkUsername = await UserModel.findOne({
+          const findUser = await UserModel.findOne({
             username: User.username,
+            email: User.email,
           });
 
-          if (checkUsername) {
-            checkUsername.facebookId = User.facebookId;
-            await checkUsername.save({ validateBeforeSave: false });
+          if (findUser) {
+            findUser.facebookId = User.facebookId;
+            await findUser.save({ validateBeforeSave: false });
 
-            const tokens = await generateTokens(checkUsername);
+            const tokens = await generateTokens(findUser);
             done(null, {
               token: tokens.token,
               refreshToken: tokens.refreshToken,
-              username: checkUsername.username,
+              username: findUser.username,
             });
           } else {
             const createUser = new UserModel(User);
