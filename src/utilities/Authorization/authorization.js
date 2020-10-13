@@ -58,7 +58,10 @@ passport.use(
           });
         } else {
           const findUser = await UserModel.findOne({
-            $or: [{ username: User.username }, { email: User.email }],
+            $or: [
+              { username: User.username, email: User.email },
+              { email: User.email },
+            ],
           });
 
           if (findUser) {
