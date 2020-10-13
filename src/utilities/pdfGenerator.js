@@ -77,11 +77,11 @@ const generatePdf = async (url, filename, event) =>
     };
     pdfDoc = printer.createPdfKitDocument(docDefinition);
     pdfDoc.pipe(
-      fs.createWriteStream(join(__dirname, `../../assets/pdf/${filename}.pdf`))
+      fs.createWriteStream(join(__dirname, `../../assets/pdf/event.pdf`))
     );
     pdfDoc.end();
     pdfDoc.on('end', () => {
-      const pdfData = join(__dirname, `../../assets/pdf/${filename}.pdf`);
+      const pdfData = join(__dirname, `../../assets/pdf/event.pdf`);
       res(pdfData);
     });
     pdfDoc.on('error', (err) => rej(err));
