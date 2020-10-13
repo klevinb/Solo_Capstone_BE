@@ -357,7 +357,6 @@ router.post('/:eventId/pdf/:userId', async (req, res, next) => {
         const imageUrl = event.image[0];
         const document = await generatePdf(imageUrl, user.email, event);
         const data = await fs.readFile(document);
-        console.log(data);
         await sgMail.send({
           to: `${user.email}`,
           from: 'events@yolo.com',
